@@ -1,10 +1,11 @@
 #!/usr/bin/python
 import requests
 import sqlite3
+from os.path import realpath, split
 
 API_ENDPOINT = 'http://apis.is/weather/observations/en?stations=1'
 SNOW_KEYWORDS = ['sleet', 'snow', 'hail']
-DB_NAME = 'snow.db'
+DB_NAME = '{}/snow.db'.format(split(realpath(__file__))[0])
 
 def get_weather():
     response = requests.get(API_ENDPOINT)
