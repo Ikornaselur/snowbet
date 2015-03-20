@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>Snow bet!</title>
+<link rel='stylesheet' href='lib/fullcalendar.min.css'/>
+<script src='lib/lib/jquery.min.js'></script>
+<script src='lib/lib/moment.min.js'></script>
+<script src='lib/fullcalendar.min.js'></script>
+<script>
+    $(document).ready(function () {
+        $('#calendar').fullCalendar({
+            eventSources: [
+                '/api/weather',
+                '/api/people'
+            ],
+            height: 'auto',
+            timeFormat: 'HH:mm'
+        });
+    });
+</script>
+</head>
+<body>
+<h1>Snowing days!</h1>
+<div id='calendar'></div>
+</body>
