@@ -8,6 +8,10 @@ SNOW_KEYWORDS = ['sleet', 'snow', 'hail']
 DB_NAME = '{}/snow.db'.format(split(realpath(__file__))[0])
 
 def get_weather():
+    """Fetch the weather from the api.
+
+    If the description is empty, then don't return anything
+    """
     response = requests.get(API_ENDPOINT)
     if response.ok:
         result = response.json()['results'][0]
@@ -22,6 +26,7 @@ def get_weather():
             return weather
 
 def write_to_db(entry):
+    """Write the weather entry to database"""
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     # Create the table if it doesn't exist
