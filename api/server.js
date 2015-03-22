@@ -23,7 +23,9 @@ app.get('/api/weather', function (req, res) {
     var end = req.query.end;
     var id = 1;
     if (typeof start !== 'undefined' && typeof end !== 'undefined') {
-       id = start + end; 
+        // The results are cached on `id`, so it makese sense to 
+        // set the cache id to start + end
+        id = start + end; 
     }
     cache.get(id, function (err, result) {
         if (err) {return;}
@@ -41,7 +43,6 @@ app.get('/api/weather', function (req, res) {
             query += ' WHERE date BETWEEN "' + start + '" AND "' + end + '"';
         }
 
-        console.log(query);
         db.each(query, function (err, row) {
             var color = 'blue';
             if (row.snow === 'True') {
@@ -87,6 +88,40 @@ app.get('/api/people', function (req, res) {
     ];
     res.json(people);
 });
+
+app.get('/api/snowfreeperiod', function(req, res) {
+    cache.get('snowfreeperiod', function (err, result) {
+        if (err) {return;}
+        if (result) {
+            res.json(result);
+            return;
+        }
+        var lastSnowQuery = 'SELECT * FROM weather WHERE snow="True" ORDER BY date DESC LIMIT 1';
+        var db = new sqlite3.Database('../snow.db');
+
+        db.get(lastSnowQuery, function (err, row) {
+            var date = row.date.split(' ')[0];
+            res.json(generatePeriod(date, 21));
+            cache.set('snowfreeperiod', row);
+        });
+        db.close();
+    });
+});
+
+function generatePeriod(startDate, days) {
+    var date = new Date(startDate);
+    var result = [];
+    for (var i = 1; i < days + 1; i++) {
+        var newDate = new Date(date).setDate(date.getDate() + i);
+        // setDate seems to return a string in unix time...
+        // So turn into a json string in the format of yyyy-mm-ddThh:mm:ss
+        newDate = new Date(newDate).toJSON();
+        // And return just the date in the end
+        result.push(newDate.split('T')[0]);
+    }
+    return result;
+};
+
 
 app.listen(app.get('port'), function () {
     console.log('Listening on port %d', app.get('port'));
