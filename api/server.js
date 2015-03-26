@@ -51,7 +51,7 @@ app.get('/api/weather', function (req, res) {
 
             var obj = {
                 'date': row.date,
-                'title': row.desc,
+                'title': row.desc + ' (' + row.snowdepth + 'cm)',
                 'color': color
             };
             result.push(obj);
@@ -89,7 +89,8 @@ app.get('/api/people', function (req, res) {
     res.json(people);
 });
 
-app.get('/api/snowfreeperiod', function(req, res) {
+app.get('/api/snowfreeperiod', function (req, res) {
+    var snowFreePeriodID = 'snowfreeperiod';
     cache.get('snowfreeperiod', function (err, result) {
         if (err) {return;}
         if (result) {
@@ -101,8 +102,9 @@ app.get('/api/snowfreeperiod', function(req, res) {
 
         db.get(lastSnowQuery, function (err, row) {
             var date = row.date.split(' ')[0];
-            res.json(generatePeriod(date, 21));
-            cache.set('snowfreeperiod', row);
+            var periodList = generatePeriod(date, 21);
+            res.json(periodList);
+            cache.set('snowfreeperiod', periodList);
         });
         db.close();
     });

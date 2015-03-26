@@ -3,7 +3,7 @@ import requests
 import sqlite3
 from os.path import realpath, split
 
-API_ENDPOINT = 'http://apis.is/weather/observations/en?stations=1'
+API_ENDPOINT = 'http://apis.is/weather/observations/en?stations=1&time=3h'
 SNOW_KEYWORDS = ['sleet', 'snow', 'hail']
 DB_NAME = '{}/snow.db'.format(split(realpath(__file__))[0])
 
@@ -18,7 +18,8 @@ def get_weather():
         weather = {
             'time': result['time'],
             'description': result['W'],
-            'snow': any(x in result['W'].lower() for x in SNOW_KEYWORDS)
+            'snow': any(x in result['W'].lower() for x in SNOW_KEYWORDS),
+            'snowdepth': 0 if not len(result['SND']) else result['SND']
         }
 
         if len(weather['description']):
@@ -37,8 +38,9 @@ def write_to_db(entry):
     if not c.fetchone():
         # Only insert if the date hasn't already been inserted
         c.execute('''INSERT INTO weather VALUES 
-                     ('{date}', '{desc}', '{snow}')'''.format(
-            date=entry['time'], desc=entry['description'], snow=entry['snow']))
+                     ('{date}', '{desc}', '{snow}', '{depth}')'''.format(
+            date=entry['time'], desc=entry['description'],
+            snow=entry['snow'], depth=entry['snowdepth']))
     conn.commit()
     conn.close()
 
