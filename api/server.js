@@ -43,15 +43,31 @@ app.get('/api/weather', function (req, res) {
             query += ' WHERE date BETWEEN "' + start + '" AND "' + end + '"';
         }
 
+        var last = 0;
         db.each(query, function (err, row) {
-            var color = 'blue';
+            var color = '#350AFF';
             if (row.snow === 'True') {
-                color = 'red';
+                color = '#FD2525';
             }
 
+            // Show change icon
+            var increase = '▲';
+            var decrease = '▼';
+            var noChange = '-';
+            var changeIcon = '';
+            if (row.snowdepth > last) {
+                changeIcon = increase;
+            }
+            else if (row.snowdepth < last) {
+                changeIcon = decrease;
+            }
+            else {
+                changeIcon = noChange;
+            }
+            last = row.snowdepth; 
             var obj = {
                 'date': row.date,
-                'title': row.desc + ' (' + row.snowdepth + 'cm)',
+                'title': row.desc + '\n Snowdepth: ' + row.snowdepth + 'cm ' + changeIcon,
                 'color': color
             };
             result.push(obj);
