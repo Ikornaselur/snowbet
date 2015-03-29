@@ -7,7 +7,7 @@ API_ENDPOINT = 'http://apis.is/weather/observations/en?stations=1&time=3h'
 SNOW_KEYWORDS = ['sleet', 'snow', 'hail']
 DB_NAME = '{}/snow.db'.format(split(realpath(__file__))[0])
 
-def get_weather():
+def get_weather(attempt=0):
     """Fetch the weather from the api.
 
     If the description is empty, then don't return anything
@@ -19,12 +19,20 @@ def get_weather():
             'time': result['time'],
             'description': result['W'],
             'snow': any(x in result['W'].lower() for x in SNOW_KEYWORDS),
-            'snowdepth': 0 if not len(result['SND']) else result['SND']
+            'snowdepth': 0 if not len(result['SND']) else result['SND'],
+            'temp': result['T']
         }
 
         if len(weather['description']):
             # Don't bother if the weather description is missing
             return weather
+    elif attempt < 3:
+        # Retry up to 3 times
+        print "Unable to fetch weather. Status code: {}. Retrying...".format(response.status_code)
+        get_weather(attempt + 1)
+    else:
+        print "Unable to fetch weather. Status code: {}".format(response.status_code)
+
 
 def write_to_db(entry):
     """Write the weather entry to database"""
@@ -32,15 +40,16 @@ def write_to_db(entry):
     c = conn.cursor()
     # Create the table if it doesn't exist
     c.execute('''CREATE TABLE IF NOT EXISTS weather
-                 (date text, desc text, snow boolean)''')
+                 (date text, desc text, snow boolean, snowdepth int, temp real)''')
 
     c.execute('SELECT * FROM weather WHERE date=\'{}\''.format(entry['time']))
     if not c.fetchone():
         # Only insert if the date hasn't already been inserted
         c.execute('''INSERT INTO weather VALUES 
-                     ('{date}', '{desc}', '{snow}', '{depth}')'''.format(
+                     ('{date}', '{desc}', '{snow}', '{depth}', '{temp}')'''.format(
             date=entry['time'], desc=entry['description'],
-            snow=entry['snow'], depth=entry['snowdepth']))
+            snow=entry['snow'], depth=entry['snowdepth'],
+            temp=entry['temp']))
     conn.commit()
     conn.close()
 

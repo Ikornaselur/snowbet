@@ -43,31 +43,41 @@ app.get('/api/weather', function (req, res) {
             query += ' WHERE date BETWEEN "' + start + '" AND "' + end + '"';
         }
 
-        var last = 0;
+        var lastSnow = 0;
+        var lastTemp = 0;
         db.each(query, function (err, row) {
             var color = '#350AFF';
-            if (row.snow === 'True') {
-                color = '#FD2525';
+            if (row.snow === 'True' || row.snowdepth > 0) {
+                color = '#FC4646';
             }
 
-            // Show change icon
+            // Snow/Temp change icon
             var increase = '▲';
             var decrease = '▼';
-            var noChange = '-';
-            var changeIcon = '';
-            if (row.snowdepth > last) {
-                changeIcon = increase;
+            var snowChangeIcon = '';
+            var tempChangeIcon = '';
+
+            if (row.snowdepth > lastSnow) {
+                snowChangeIcon = increase;
             }
-            else if (row.snowdepth < last) {
-                changeIcon = decrease;
+            else if (row.snowdepth < lastSnow) {
+                snowChangeIcon = decrease;
             }
-            else {
-                changeIcon = noChange;
+
+            if (row.temp > lastTemp) {
+                tempChangeIcon = increase;
             }
-            last = row.snowdepth; 
+            else if (row.temp < lastTemp) {
+                tempChangeIcon = decrease;
+            }
+
+            lastSnow = row.snowdepth; 
+            lastTemp = row.temp;
             var obj = {
                 'date': row.date,
-                'title': row.desc + '\n Snowdepth: ' + row.snowdepth + 'cm ' + changeIcon,
+                'title': row.desc + 
+                    '\n Snowdepth: ' + row.snowdepth + 'cm ' + snowChangeIcon +
+                    '\n Temperature: ' + row.temp + '°C ' + tempChangeIcon,
                 'color': color
             };
             result.push(obj);
