@@ -40,15 +40,27 @@ app.get('/api/weather', function (req, res) {
         var result = [];
         var query = 'SELECT * FROM weather';
         if (id !== 1) { //id is 1 if no start and end query params
-            query += ' WHERE date BETWEEN "' + start + '" AND "' + end + '"';
+            // Start one day earlier for the snow depth check.
+            // Since I am coloring the cell orange if the last snow depth
+            // check was more than 0 I need to be able to check 24 hours 
+            // in the past
+            query += ' WHERE date BETWEEN "' + subtractDays(start, 1) + '" AND "' + end + '"';
         }
 
         var lastSnow = 0;
         var lastTemp = 0;
         db.each(query, function (err, row) {
-            var color = '#350AFF';
+            var colors = {
+                'safe': '#350AFF',
+                'snow': '#FC4646',
+                'warning': '#FF752D'
+            }
+            var color = colors.safe;
             if (row.snow === 'True' || row.snowdepth > 0) {
-                color = '#FC4646';
+                color = colors.snow;
+            }
+            else if (lastSnow > 0) {
+                color = colors.warning;
             }
 
             // Snow/Temp change icon
@@ -71,12 +83,17 @@ app.get('/api/weather', function (req, res) {
                 tempChangeIcon = decrease;
             }
 
-            lastSnow = row.snowdepth; 
             lastTemp = row.temp;
+
+            var snowDepth = row.snowdepth;
+            if (typeof snowDepth == 'number') {
+                snowDepth = '\n Snowdepth: ' + snowDepth + 'cm ' + snowChangeIcon;
+                lastSnow = row.snowdepth; 
+            }
             var obj = {
                 'date': row.date,
                 'title': row.desc + 
-                    '\n Snowdepth: ' + row.snowdepth + 'cm ' + snowChangeIcon +
+                    snowDepth +
                     '\n Temperature: ' + row.temp + '°C ' + tempChangeIcon,
                 'color': color
             };
@@ -149,6 +166,25 @@ function generatePeriod(startDate, days) {
     }
     return result;
 };
+
+/*
+ *  Takes in date in any form supported by the Date object constructer
+ *  but will return the date in the form 'yyyy-mm-dd'
+ */
+function subtractDays(date, days) {
+    var obj = new Date(date);
+    obj.setDate(obj.getDate() - days);
+    obj = new Date(obj);
+    var month = obj.getMonth() + 1;
+    if (month < 10) {
+        month = '0' + month;
+    }
+    var day = obj.getDate();
+    if (day < 10) {
+        day = '0' + day;
+    }
+    return obj.getFullYear() + '-' + month + '-' + day;
+}
 
 
 app.listen(app.get('port'), function () {

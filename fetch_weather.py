@@ -19,7 +19,7 @@ def get_weather(attempt=0):
             'time': result['time'],
             'description': result['W'],
             'snow': any(x in result['W'].lower() for x in SNOW_KEYWORDS),
-            'snowdepth': 0 if not len(result['SND']) else result['SND'],
+            'snowdepth': result['SND'],
             'temp': result['T']
         }
 
