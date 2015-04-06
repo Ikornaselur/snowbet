@@ -49,6 +49,7 @@ app.get('/api/weather', function (req, res) {
 
         var lastSnow = 0;
         var lastTemp = 0;
+        var numberOfChecksSinceSnow = 0;
         db.each(query, function (err, row) {
             var colors = {
                 'safe': '#350AFF',
@@ -59,8 +60,11 @@ app.get('/api/weather', function (req, res) {
             if (row.snow === 'True' || row.snowdepth > 0) {
                 color = colors.snow;
             }
-            else if (lastSnow > 0) {
+            else if (numberOfChecksSinceSnow <= 7) {
                 color = colors.warning;
+            }
+            else {
+                lastSnow = 0;
             }
 
             // Snow/Temp change icon
@@ -89,6 +93,10 @@ app.get('/api/weather', function (req, res) {
             if (typeof snowDepth == 'number') {
                 snowDepth = '\n Snowdepth: ' + snowDepth + 'cm ' + snowChangeIcon;
                 lastSnow = row.snowdepth; 
+                numberOfChecksSinceSnow = 0;
+            }
+            else {
+                numberOfChecksSinceSnow += 1;
             }
             var obj = {
                 'date': row.date,
