@@ -148,7 +148,7 @@ app.get('/api/snowfreeperiod', function (req, res) {
             res.json(result);
             return;
         }
-        var lastSnowQuery = 'SELECT * FROM weather WHERE snow="True" ORDER BY date DESC LIMIT 1';
+        var lastSnowQuery = 'SELECT * FROM weather WHERE snow="True" OR snowdepth!="" ORDER BY date DESC LIMIT 1';
         var db = new sqlite3.Database('../snow.db');
 
         db.get(lastSnowQuery, function (err, row) {
