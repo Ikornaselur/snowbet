@@ -169,8 +169,15 @@ function generatePeriod(startDate, days) {
         // setDate seems to return a string in unix time...
         // So turn into a json string in the format of yyyy-mm-ddThh:mm:ss
         newDate = new Date(newDate).toJSON();
-        // And return just the date in the end
-        result.push(newDate.split('T')[0]);
+        // And return the date in an 'allDay' calendar object
+        result.push({
+            'title': 'Potential 21 days of no snow',
+            'start': newDate,
+            'end': newDate,
+            'allDay': true,
+            'color': '#3CFF37'
+        });
+        //result.push(newDate.split('T')[0]);
     }
     return result;
 };
