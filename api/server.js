@@ -63,8 +63,17 @@ app.get('/api/weather', function (req, res) {
             else if (numberOfChecksSinceSnow <= 7) {
                 color = colors.warning;
             }
-            else {
+            else if (lastSnow > 0) {
                 lastSnow = 0;
+                // Clear the warnings since last snowdepth was encountered
+                for (var i = 0; i <= 7; i++) {
+                    var index = result.length - i - 1;
+                    if (result[index].color === colors.snow) {
+                        // Break when we hit a snow colored event
+                        break;   
+                    }
+                    result[index].color = colors.safe;
+                }
             }
 
             // Snow/Temp change icon
@@ -177,7 +186,6 @@ function generatePeriod(startDate, days) {
             'allDay': true,
             'color': '#3CFF37'
         });
-        //result.push(newDate.split('T')[0]);
     }
     return result;
 };
