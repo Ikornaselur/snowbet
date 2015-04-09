@@ -146,15 +146,30 @@ app.get('/api/people', function (req, res) {
             'date': '2015-05-25'
         }
     ];
-    res.json(people);
+    getSnowFreePeriod(function (list) {
+        var lastDate = new Date(list[list.length-1].start);
+        for (var i = 0; i < people.length; i++) {
+            var personDate = new Date(people[i].date);
+            if (personDate < lastDate) {
+                people[i].color = 'red';
+            }
+        }
+        res.json(people);
+    });
 });
 
 app.get('/api/snowfreeperiod', function (req, res) {
+    getSnowFreePeriod(function (x) {
+        res.json(x);
+    });
+});
+
+function getSnowFreePeriod(cb) {
     var snowFreePeriodID = 'snowfreeperiod';
     cache.get('snowfreeperiod', function (err, result) {
         if (err) {return;}
         if (result) {
-            res.json(result);
+            cb(result);
             return;
         }
         var lastSnowQuery = 'SELECT * FROM weather WHERE snow="True" OR snowdepth!="" ORDER BY date DESC LIMIT 1';
@@ -163,12 +178,12 @@ app.get('/api/snowfreeperiod', function (req, res) {
         db.get(lastSnowQuery, function (err, row) {
             var date = row.date.split(' ')[0];
             var periodList = generatePeriod(date, 21);
-            res.json(periodList);
+            cb(periodList);
             cache.set('snowfreeperiod', periodList);
         });
         db.close();
     });
-});
+}
 
 function generatePeriod(startDate, days) {
     var date = new Date(startDate);
