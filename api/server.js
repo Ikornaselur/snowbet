@@ -27,9 +27,9 @@ app.get('/api/weather', function (req, res) {
         // set the cache id to start + end
         id = start + end; 
     }
-    cache.get(id, function (err, result) {
+    cache.get(id, function (err, res) {
         if (err) {return;}
-        if (result) {
+        if (res) {
             console.log('%s: Hit from cache', new Date().toGMTString());
             res.json(result);
             return;
@@ -55,7 +55,7 @@ app.get('/api/weather', function (req, res) {
                 'safe': '#350AFF',
                 'snow': '#FC4646',
                 'warning': '#FF752D'
-            }
+            };
             var color = colors.safe;
             if (row.snow === 'True' || row.snowdepth > 0) {
                 color = colors.snow;
@@ -203,7 +203,7 @@ function generatePeriod(startDate, days) {
         });
     }
     return result;
-};
+}
 
 /*
  *  Takes in date in any form supported by the Date object constructer

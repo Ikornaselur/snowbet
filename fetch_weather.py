@@ -7,6 +7,7 @@ API_ENDPOINT = 'http://apis.is/weather/observations/en?stations=1&time=3h'
 SNOW_KEYWORDS = ['sleet', 'snow', 'hail']
 DB_NAME = '{}/snow.db'.format(split(realpath(__file__))[0])
 
+
 def get_weather(attempt=0):
     """Fetch the weather from the api.
 
@@ -28,10 +29,12 @@ def get_weather(attempt=0):
             return weather
     elif attempt < 3:
         # Retry up to 3 times
-        print "Unable to fetch weather. Status code: {}. Retrying...".format(response.status_code)
+        print "Unable to fetch weather. Status code: {}. Retrying...".format(
+            response.status_code)
         get_weather(attempt + 1)
     else:
-        print "Unable to fetch weather. Status code: {}".format(response.status_code)
+        print "Unable to fetch weather. Status code: {}".format(
+            response.status_code)
 
 
 def write_to_db(entry):
@@ -39,14 +42,16 @@ def write_to_db(entry):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     # Create the table if it doesn't exist
-    c.execute('''CREATE TABLE IF NOT EXISTS weather
-                 (date text, desc text, snow boolean, snowdepth int, temp real)''')
+    c.execute(
+        '''CREATE TABLE IF NOT EXISTS weather
+           (date text, desc text, snow boolean, snowdepth int, temp real)''')
 
     c.execute('SELECT * FROM weather WHERE date=\'{}\''.format(entry['time']))
     if not c.fetchone():
         # Only insert if the date hasn't already been inserted
-        c.execute('''INSERT INTO weather VALUES 
-                     ('{date}', '{desc}', '{snow}', '{depth}', '{temp}')'''.format(
+        c.execute(
+            '''INSERT INTO weather VALUES
+               ('{date}', '{desc}', '{snow}', '{depth}', '{temp}')'''.format(
             date=entry['time'], desc=entry['description'],
             snow=entry['snow'], depth=entry['snowdepth'],
             temp=entry['temp']))
